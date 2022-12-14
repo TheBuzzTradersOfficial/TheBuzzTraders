@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/Finnhub-Stock-API/finnhub-go"
 	"github.com/joho/godotenv"
 )
 
@@ -35,6 +37,28 @@ type Page struct {
 	Title string
 }
 
+type StockQuote struct {
+	CurrentPrice       float64 `json:"c"`
+	HighPOD            float64 `json:"h"`
+	LowPOD             float64 `json:"l"`
+	OpenPOD            float64 `json:"o"`
+	PreviousClosePrice float64 `json:"pc"`
+	Tag                int     `json:"t"`
+}
+
+func getQuote(symbol string) {
+	cfg := finnhub.NewConfiguration()
+	cfg.AddDefaultHeader("X-Finnhub-Token", os.Getenv("STOCK_API_KEY"))
+	finnhubClient := finnhub.NewAPIClient(cfg).DefaultApi
+
+	quote, _, err := finnhubClient.Quote(context.Background(), symbol)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Printf("%+v\n", quote)
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	templ.ExecuteTemplate(w, "index", &Page{Title: "Home"})
 }
@@ -48,6 +72,8 @@ func main() {
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
+
+	getQuote("AAPL")
 
 	port := os.Getenv("PORT")
 	if port == "" {
