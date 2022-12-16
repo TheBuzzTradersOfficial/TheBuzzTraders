@@ -1,16 +1,17 @@
 package main
 
 import (
-	"context"
+	"TheBuzzTraders/stocks"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/Finnhub-Stock-API/finnhub-go"
 	"github.com/joho/godotenv"
 )
 
@@ -37,28 +38,6 @@ type Page struct {
 	Title string
 }
 
-type StockQuote struct {
-	CurrentPrice       float64 `json:"c"`
-	HighPOD            float64 `json:"h"`
-	LowPOD             float64 `json:"l"`
-	OpenPOD            float64 `json:"o"`
-	PreviousClosePrice float64 `json:"pc"`
-	Tag                int     `json:"t"`
-}
-
-func getQuote(symbol string) {
-	cfg := finnhub.NewConfiguration()
-	cfg.AddDefaultHeader("X-Finnhub-Token", os.Getenv("STOCK_API_KEY"))
-	finnhubClient := finnhub.NewAPIClient(cfg).DefaultApi
-
-	quote, _, err := finnhubClient.Quote(context.Background(), symbol)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Printf("%+v\n", quote)
-}
-
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	templ.ExecuteTemplate(w, "index", &Page{Title: "Home"})
 }
@@ -67,18 +46,45 @@ func newsHandler(w http.ResponseWriter, r *http.Request) {
 	templ.ExecuteTemplate(w, "news", &Page{Title: "News"})
 }
 
+func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		u, err := url.Parse(r.URL.String())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		params := u.Query()
+		searchQuery := params.Get("q")
+
+		results, err := stockapi.FetchQuote(searchQuery)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Printf("%+v", results)
+	}
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error loading .env file")
 	}
 
-	getQuote("AAPL")
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
+
+	apiKey := os.Getenv("STOCK_API_KEY")
+	if apiKey == "" {
+		log.Fatal("Env: apiKey must be set")
+	}
+
+	stockClient := &http.Client{Timeout: 10 * time.Second}
+	stockapi := stocks.NewClient(stockClient, apiKey)
 
 	fs := http.FileServer(http.Dir("assets"))
 
@@ -86,5 +92,6 @@ func main() {
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/News", newsHandler)
+	mux.HandleFunc("/search", searchHandler(stockapi))
 	http.ListenAndServe(":"+port, mux)
 }
