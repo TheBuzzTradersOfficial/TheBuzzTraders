@@ -15,6 +15,8 @@ type Client struct {
 
 type StockQuote struct {
 	CurrentPrice       float64 `json:"c"`
+	Change             float64 `json:"d"`
+	PercentChange      float64 `json:"dp"`
 	HighPOD            float64 `json:"h"`
 	LowPOD             float64 `json:"l"`
 	OpenPOD            float64 `json:"o"`

@@ -1,7 +1,9 @@
 {{ define "index" }}
 {{ template "header" .}}
     <div class="stock-container-index">
+        <p>{{ .Symbol }}</p>
         <p>Current Price: {{ .CurrentPrice }}</p>
+        <p>Percent Change: {{ .PercentChange }}</p>
     </div>
 {{ template "footer" .}}
 {{ end }}

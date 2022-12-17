@@ -44,19 +44,17 @@ type StockSearch struct {
 	Results *stocks.StockQuote
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	quote := getQuote("TSLA")
+type StockTicker struct {
+	Symbol        string
+	CurrentPrice  float64
+	PercentChange float64
+}
 
-	stockQuote := stocks.StockQuote{
-		CurrentPrice:       quote.CurrentPrice,
-		HighPOD:            quote.HighPOD,
-		LowPOD:             quote.LowPOD,
-		OpenPOD:            quote.OpenPOD,
-		PreviousClosePrice: quote.PreviousClosePrice,
-	}
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	TickerInfo := getStockTickerInfo("AAPL")
 
 	buf := &bytes.Buffer{}
-	err := templ.ExecuteTemplate(w, "index", stockQuote)
+	err := templ.ExecuteTemplate(w, "index", TickerInfo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -122,6 +120,17 @@ func getQuote(symbol string) *stocks.StockQuote {
 	}
 
 	return quote
+}
+
+func getStockTickerInfo(symbol string) *StockTicker {
+	quote := getQuote(symbol)
+	tickerInfo := &StockTicker{}
+
+	tickerInfo.CurrentPrice = quote.CurrentPrice
+	tickerInfo.Symbol = symbol
+	tickerInfo.PercentChange = quote.PercentChange
+
+	return tickerInfo
 }
 
 func main() {
