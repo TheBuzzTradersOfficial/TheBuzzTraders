@@ -1,5 +1,7 @@
 {{ define "index" }}
 {{ template "header" .}}
-    <p>Home Page</p>
+    <div class="stock-container-index">
+        <p>Current Price: {{ .CurrentPrice }}</p>
+    </div>
 {{ template "footer" .}}
 {{ end }}

@@ -47,3 +47,12 @@ func (c *Client) FetchQuote(query string) (*StockQuote, error) {
 	res := &StockQuote{}
 	return res, json.Unmarshal(body, res)
 }
+
+func (c *Client) GetQuote(symbol string) *StockQuote {
+	quote, err := c.FetchQuote(symbol)
+	if err != nil {
+		return nil
+	}
+
+	return quote
+}
