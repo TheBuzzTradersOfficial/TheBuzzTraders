@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -48,6 +49,7 @@ type StockTicker struct {
 	Symbol        string
 	CurrentPrice  float64
 	PercentChange float64
+	Change        float64
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +130,8 @@ func getStockTickerInfo(symbol string) *StockTicker {
 
 	tickerInfo.CurrentPrice = quote.CurrentPrice
 	tickerInfo.Symbol = symbol
-	tickerInfo.PercentChange = quote.PercentChange
+	tickerInfo.PercentChange = math.Round(quote.PercentChange*100) / 100
+	tickerInfo.Change = quote.Change
 
 	return tickerInfo
 }

@@ -1,7 +1,40 @@
+body {
+    background-color: #191919;
+    color: #ffffff;
+}
+
+.navbar {
+    margin-bottom: 30px;
+}
+
 .nav-list li a{
-    color: rgba(255,255,255,.5)!important;
+    color: #ffffff80;
+    top: 0px;
 }
 
 .nav-list li a.active {
-    color: #ffffff!important;
+    color: #ffffff;
+}
+
+.stock-container {
+    width: fit-content;
+    padding: 1rem 2rem 1rem 2rem;
+    border: 3px solid gold;
+    border-radius: 1em;
+    margin-left: 15px;
+    line-height: 15px;
+}
+
+.is-pulled-right {
+    float: right;
+}
+
+.percent-change {
+    font-size: 1.2rem;
+    color: red;
+}
+
+.amount-changed {
+    font-size: 0.9rem;
+    color: red;
 }
