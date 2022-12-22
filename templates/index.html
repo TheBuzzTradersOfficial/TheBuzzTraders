@@ -1,16 +1,12 @@
 {{ define "index" }}
 {{ template "header" .}}
-    <div class="stock-container">
-        <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-        <p class="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">({{ .Change }})</span></p>
-    </div>
-    <div class="stock-container">
-        <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-        <p class="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">({{ .Change }})</span></p>
-    </div>
-    <div class="stock-container">
-        <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-        <p class="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">({{ .Change }})</span></p>
-    </div>
+    {{ if . }}
+        {{ range . }}
+        <div class="stock-container">
+            <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
+            <p class="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">({{ .Change }})</span></p>
+        </div>
+        {{ end }}
+    {{ end }}
 {{ template "footer" .}}
 {{ end }}

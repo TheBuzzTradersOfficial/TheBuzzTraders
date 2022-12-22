@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -45,15 +44,17 @@ type StockSearch struct {
 	Results *stocks.StockQuote
 }
 
-type StockTicker struct {
-	Symbol        string
-	CurrentPrice  float64
-	PercentChange float64
-	Change        float64
+func Symbol() string {
+	p := &stocks.StockTicker{}
+	return p.Symbol
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	TickerInfo := getStockTickerInfo("AAPL")
+	TickerInfo1 := stocks.GetStockTickerInfo("AAPL")
+	TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
+	TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
+	TickerInfo4 := stocks.GetStockTickerInfo("QQQ")
+	TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
 	buf := &bytes.Buffer{}
 	err := templ.ExecuteTemplate(w, "index", TickerInfo)
@@ -105,35 +106,6 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 
 		buf.WriteTo(w)
 	}
-}
-
-func getQuote(symbol string) *stocks.StockQuote {
-	apiKey := os.Getenv("STOCK_API_KEY")
-	if apiKey == "" {
-		log.Fatal("Env: apiKey must be set")
-	}
-
-	stockClient := &http.Client{Timeout: 10 * time.Second}
-	stockapi := stocks.NewClient(stockClient, apiKey)
-
-	quote, err := stockapi.FetchQuote(symbol)
-	if err != nil {
-		return nil
-	}
-
-	return quote
-}
-
-func getStockTickerInfo(symbol string) *StockTicker {
-	quote := getQuote(symbol)
-	tickerInfo := &StockTicker{}
-
-	tickerInfo.CurrentPrice = quote.CurrentPrice
-	tickerInfo.Symbol = symbol
-	tickerInfo.PercentChange = math.Round(quote.PercentChange*100) / 100
-	tickerInfo.Change = quote.Change
-
-	return tickerInfo
 }
 
 func main() {
