@@ -53,7 +53,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	TickerInfo1 := stocks.GetStockTickerInfo("AAPL")
 	TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
 	TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
-	TickerInfo4 := stocks.GetStockTickerInfo("QQQ")
+	TickerInfo4 := stocks.GetStockTickerInfo("TM")
 	TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
 	buf := &bytes.Buffer{}

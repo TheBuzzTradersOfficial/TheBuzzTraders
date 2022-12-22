@@ -30,7 +30,7 @@ body {
     float: right;
 }
 
-.percent-change {
+#percent-change {
     font-size: 1.2rem;
     color: red;
 }

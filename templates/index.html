@@ -4,9 +4,36 @@
         {{ range . }}
         <div class="stock-container">
             <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-            <p class="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">({{ .Change }})</span></p>
+            <p class="percent-change" id="percent-change"><span id="stock-ticker-up">&#9652;</span><span id="stock-ticker-down">&#9662;</span>{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
         </div>
         {{ end }}
     {{ end }}
+    <script>
+        priceChange = document.getElementsByClassName("change-price")
+        priceChangeFinal = []
+        upArrowList = []
+        downArrowList = []
+        upArrow = document.getElementById("stock-ticker-up")
+        downArrow = document.getElementById("stock-ticker-down")
+
+        for(i = 0; i < priceChange.length; i++) {
+            priceChangeFinal.push(parseFloat(priceChange[i].innerText))
+            upArrowList.push(upArrow)
+            downArrowList.push(downArrow)
+            isPositive = false
+            
+            if(Math.sign(priceChangeFinal[i]) == 1) {
+                document.getElementsByClassName("percent-change")[i].style.color = "green"
+                document.getElementsByClassName("amount-changed")[i].style.color = "green"
+                isPositive = true
+            } else if(Math.sign(priceChangeFinal[i]) == -1) {
+                document.getElementsByClassName("percent-change")[i].style.color = "red"
+                document.getElementsByClassName("amount-changed")[i].style.color = "red"
+                isPositive = false
+            }
+
+            console.log(isPositive)
+        }
+    </script>
 {{ template "footer" .}}
 {{ end }}
