@@ -4,35 +4,30 @@
         {{ range . }}
         <div class="stock-container">
             <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-            <p class="percent-change" id="percent-change"><span id="stock-ticker-up">&#9652;</span><span id="stock-ticker-down">&#9662;</span>{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
+            <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
         </div>
         {{ end }}
     {{ end }}
     <script>
         priceChange = document.getElementsByClassName("change-price")
         priceChangeFinal = []
-        upArrowList = []
-        downArrowList = []
-        upArrow = document.getElementById("stock-ticker-up")
-        downArrow = document.getElementById("stock-ticker-down")
+        upArrow = "▴"
+        downArrow = "▾"
 
         for(i = 0; i < priceChange.length; i++) {
             priceChangeFinal.push(parseFloat(priceChange[i].innerText))
-            upArrowList.push(upArrow)
-            downArrowList.push(downArrow)
-            isPositive = false
-            
-            if(Math.sign(priceChangeFinal[i]) == 1) {
-                document.getElementsByClassName("percent-change")[i].style.color = "green"
-                document.getElementsByClassName("amount-changed")[i].style.color = "green"
-                isPositive = true
-            } else if(Math.sign(priceChangeFinal[i]) == -1) {
-                document.getElementsByClassName("percent-change")[i].style.color = "red"
-                document.getElementsByClassName("amount-changed")[i].style.color = "red"
-                isPositive = false
-            }
+        }
 
-            console.log(isPositive)
+        for(j = 0; j < priceChangeFinal.length; j++) {
+            if(Math.sign(priceChangeFinal[j]) == 1) {
+                percentChange = document.getElementsByClassName("percent-change")[j]
+                percentChange.style.color = "green"
+                percentChange.innerText = upArrow.concat(percentChange.innerText)
+            } else if(Math.sign(priceChangeFinal[j]) == -1) {
+                percentChange = document.getElementsByClassName("percent-change")[j]
+                document.getElementsByClassName("percent-change")[j].style.color = "red"
+                percentChange.innerText = downArrow.concat(percentChange.innerText)
+            }
         }
     </script>
 {{ template "footer" .}}

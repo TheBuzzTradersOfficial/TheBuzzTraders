@@ -50,10 +50,10 @@ func Symbol() string {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	TickerInfo1 := stocks.GetStockTickerInfo("AAPL")
+	TickerInfo1 := stocks.GetStockTickerInfo("VZ")
 	TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
 	TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
-	TickerInfo4 := stocks.GetStockTickerInfo("TM")
+	TickerInfo4 := stocks.GetStockTickerInfo("APE")
 	TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
 	buf := &bytes.Buffer{}
