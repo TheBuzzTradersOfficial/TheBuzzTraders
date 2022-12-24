@@ -82,10 +82,10 @@ func GetStockTickerInfo(symbol string) *StockTicker {
 	quote := GetQuote(symbol)
 	tickerInfo := &StockTicker{}
 
-	tickerInfo.CurrentPrice = quote.CurrentPrice
+	tickerInfo.CurrentPrice = math.Round(quote.CurrentPrice*100) / 100
 	tickerInfo.Symbol = symbol
 	tickerInfo.PercentChange = math.Round(quote.PercentChange*100) / 100
-	tickerInfo.Change = quote.Change
+	tickerInfo.Change = math.Round(quote.Change*100) / 100
 
 	return tickerInfo
 }
