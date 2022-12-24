@@ -3,13 +3,15 @@
     {{ if . }}
         {{ range . }}
         <div class="stock-container">
-            <p>{{ .Symbol }} <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
+            <p><a class="ticker-link" href="/search?q=">{{ .Symbol }}</a> <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
             <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
         </div>
         {{ end }}
     {{ end }}
     <script>
         priceChange = document.getElementsByClassName("change-price")
+        tickerLink = document.getElementsByClassName("ticker-link")
+        tickerSymbol = document.getElementsByClassName("ticker-link")
         priceChangeFinal = []
         upArrow = "▴"
         downArrow = "▾"
@@ -28,6 +30,15 @@
                 document.getElementsByClassName("percent-change")[j].style.color = "red"
                 percentChange.innerText = downArrow.concat(percentChange.innerText)
             }
+        }
+
+        
+        // Concat ticker Symbol to query link
+        for(k = 0; k < tickerLink.length; k++) {
+            tickerHref = tickerLink[k].href
+            tickerText = tickerSymbol[k].text
+            tickerSearchURL = tickerHref.concat(tickerText)
+            tickerLink[k].setAttribute('href', tickerSearchURL)
         }
     </script>
 {{ template "footer" .}}

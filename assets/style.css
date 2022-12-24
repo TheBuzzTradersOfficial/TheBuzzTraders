@@ -39,3 +39,11 @@ body {
     font-size: 0.9rem;
     color: red;
 }
+
+.ticker-link {
+    color: white;
+}
+
+.ticker-link:hover {
+    color: #ffffffea;
+}
