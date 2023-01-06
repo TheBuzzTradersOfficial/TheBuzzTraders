@@ -42,6 +42,7 @@ type Page struct {
 type StockSearch struct {
 	Query   string
 	Results *stocks.StockQuote
+	News    *stocks.Article
 }
 
 func Symbol() string {
@@ -92,9 +93,16 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 			return
 		}
 
+		news, err := stockapi.GetArticle(0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		search := &StockSearch{
 			Query:   searchQuery,
 			Results: results,
+			News:    news,
 		}
 
 		buf := &bytes.Buffer{}
