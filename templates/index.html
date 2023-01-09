@@ -1,12 +1,15 @@
 {{ define "index" }}
 {{ template "header" .}}
     {{ if . }}
-        {{ range . }}
+        {{ range $.Ticker }}
         <div class="stock-container">
             <p><a class="ticker-link" href="/search?q=">{{ .Symbol }}</a> <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
             <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
         </div>
         {{ end }}
+        <div>
+            <p>{{ $.Article.Headline }}</p>
+        </div>
     {{ end }}
     <script>
         priceChange = document.getElementsByClassName("change-price")

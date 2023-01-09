@@ -3,6 +3,7 @@ package stocks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math"
@@ -118,7 +119,7 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 		panic(err)
 	}
 	for _, val := range m {
-		fmt.Println(m[0].ID, val)
+		fmt.Println(len(m), val)
 	}
 
 	return m, err

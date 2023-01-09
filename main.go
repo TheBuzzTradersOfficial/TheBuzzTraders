@@ -42,7 +42,11 @@ type Page struct {
 type StockSearch struct {
 	Query   string
 	Results *stocks.StockQuote
-	News    *stocks.Article
+}
+
+type IndexInfo struct {
+	Ticker  []stocks.StockTicker
+	Article *stocks.Article
 }
 
 func Symbol() string {
@@ -50,20 +54,33 @@ func Symbol() string {
 	return p.Symbol
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	TickerInfo1 := stocks.GetStockTickerInfo("VZ")
-	TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
-	TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
-	TickerInfo4 := stocks.GetStockTickerInfo("AAPL")
-	TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
+func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		TickerInfo1 := stocks.GetStockTickerInfo("VZ")
+		TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
+		TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
+		TickerInfo4 := stocks.GetStockTickerInfo("AAPL")
+		TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
-	buf := &bytes.Buffer{}
-	err := templ.ExecuteTemplate(w, "index", TickerInfo)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		news, err := stockapi.GetArticle(0)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		index := IndexInfo{
+			Ticker:  TickerInfo,
+			Article: news,
+		}
+
+		buf := &bytes.Buffer{}
+		err = templ.ExecuteTemplate(w, "index", index)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		buf.WriteTo(w)
 	}
-
-	buf.WriteTo(w)
 }
 
 func newsHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,16 +110,9 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 			return
 		}
 
-		news, err := stockapi.GetArticle(0)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
 		search := &StockSearch{
 			Query:   searchQuery,
 			Results: results,
-			News:    news,
 		}
 
 		buf := &bytes.Buffer{}
@@ -139,7 +149,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
-	mux.HandleFunc("/", indexHandler)
+	mux.HandleFunc("/", indexHandler(stockapi))
 	mux.HandleFunc("/News", newsHandler)
 	mux.HandleFunc("/search", searchHandler(stockapi))
 	http.ListenAndServe(":"+port, mux)
