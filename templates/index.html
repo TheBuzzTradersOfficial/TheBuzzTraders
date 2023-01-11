@@ -7,9 +7,14 @@
             <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
         </div>
         {{ end }}
-        <div>
-            <p>{{ $.Article.Headline }}</p>
+        {{ range $.Article }}
+        <div class="news-container">
+            <div class="news-article">
+                <img class="news-image" src="{{ .Image }}">
+                <p class="news-headline"><a href="{{ .URL }}">{{ .Headline }}</a></p>
+            </div>
         </div>
+        {{ end }}
     {{ end }}
     <script>
         priceChange = document.getElementsByClassName("change-price")

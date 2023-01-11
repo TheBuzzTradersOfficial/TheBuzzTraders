@@ -46,7 +46,7 @@ type StockSearch struct {
 
 type IndexInfo struct {
 	Ticker  []stocks.StockTicker
-	Article *stocks.Article
+	Article []*stocks.Article
 }
 
 func Symbol() string {
@@ -62,19 +62,25 @@ func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
 		TickerInfo4 := stocks.GetStockTickerInfo("AAPL")
 		TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
-		news, err := stockapi.GetArticle(0)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		var newsList []*stocks.Article
+
+		for i := 0; i < 10; i++ {
+			news, err := stockapi.GetArticle(i)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			newsList = append(newsList, news)
 		}
 
 		index := IndexInfo{
 			Ticker:  TickerInfo,
-			Article: news,
+			Article: newsList,
 		}
 
 		buf := &bytes.Buffer{}
-		err = templ.ExecuteTemplate(w, "index", index)
+		err := templ.ExecuteTemplate(w, "index", index)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

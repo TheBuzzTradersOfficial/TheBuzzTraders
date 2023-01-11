@@ -14,8 +14,8 @@ import (
 )
 
 type Client struct {
-	http *http.Client
-	key  string
+	*http.Client
+	key string
 }
 
 type StockQuote struct {
@@ -48,6 +48,10 @@ type Article struct {
 	URL      string `json:"url"`
 }
 
+type ArticleList struct {
+	ArticleListItem []Article
+}
+
 // Creates a client object that allows us to connect to the API
 func NewClient(httpClient *http.Client, key string) *Client {
 	return &Client{httpClient, key}
@@ -56,7 +60,7 @@ func NewClient(httpClient *http.Client, key string) *Client {
 // Connects to the finnhub API and makes a call to the Quote endpoint - returns response from the call and error
 func (c *Client) FetchQuote(query string) (*StockQuote, error) {
 	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s&token=%s", url.QueryEscape(query), c.key)
-	resp, err := c.http.Get(endpoint)
+	resp, err := c.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +116,7 @@ func GetStockTickerInfo(symbol string) *StockTicker {
 // Connects to the finnhub API and makes a call to the Market News endpoint - returns response from the call and error
 func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/news?category=%s&token=%s", url.QueryEscape(query), c.key)
-	resp, err := c.http.Get(endpoint)
+	resp, err := c.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -147,5 +151,20 @@ func (c *Client) GetArticle(articleNum int) (*Article, error) {
 
 	article := articles[articleNum]
 
-	return &article, nil
+	return &article, err
+}
+
+func (c *Client) GetRecentArticles() ([]Article, error) {
+	articles, err := c.FetchMarketNews("general")
+	if err != nil {
+		return nil, err
+	}
+
+	var results []Article
+
+	for i := 0; i < 10; i++ {
+		results = append(results, articles[len(articles)-i])
+	}
+
+	return results, err
 }

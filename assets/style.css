@@ -1,5 +1,5 @@
 body {
-    background-color: #191919;
+    background-color: #15161F;
     color: #ffffff;
 }
 
@@ -19,11 +19,16 @@ body {
 .stock-container {
     width: fit-content;
     padding: 1rem 2rem 1rem 2rem;
-    border: 3px solid gold;
+    background-color: #272733;
+    box-shadow: 2px 2px 2px #272733;
     border-radius: 1em;
     margin-left: 15px;
     line-height: 15px;
     display: inline-block;
+}
+
+.btn {
+    border: none;
 }
 
 .is-pulled-right {
@@ -41,9 +46,34 @@ body {
 }
 
 .ticker-link {
-    color: white;
+    background: linear-gradient(to bottom, #cfc09f 22%,#634f2c 24%, #cfc09f 26%, #cfc09f 27%,#ffecb3 40%,#684a10 78%); 
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #fff;
 }
 
 .ticker-link:hover {
     color: #ffffffea;
+}
+
+.news-container {
+    background-color: #272733;
+    border-radius: 1em;
+    padding: 10px;
+}
+
+.news-article {
+    margin: 10px;
+}
+
+.news-headline {
+    background: linear-gradient(to bottom, #cfc09f 22%,#634f2c 24%, #cfc09f 26%, #cfc09f 27%,#ffecb3 40%,#684a10 78%); 
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #fff;
+    text-align: center;
+}
+
+.news-image {
+    width: 20%;
 }
