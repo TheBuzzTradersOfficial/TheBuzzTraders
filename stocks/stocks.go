@@ -136,9 +136,9 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 	if err := json.Unmarshal(body, &m); err != nil {
 		panic(err)
 	}
-	for _, val := range m {
-		fmt.Println(len(m), val)
-	}
+	// for _, val := range m {
+	// 	fmt.Println(len(m), val)
+	// }
 
 	return m, err
 }
@@ -152,19 +152,4 @@ func (c *Client) GetArticle(articleNum int) (*Article, error) {
 	article := articles[articleNum]
 
 	return &article, err
-}
-
-func (c *Client) GetRecentArticles() ([]Article, error) {
-	articles, err := c.FetchMarketNews("general")
-	if err != nil {
-		return nil, err
-	}
-
-	var results []Article
-
-	for i := 0; i < 10; i++ {
-		results = append(results, articles[len(articles)-i])
-	}
-
-	return results, err
 }

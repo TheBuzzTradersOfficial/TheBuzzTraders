@@ -1,21 +1,29 @@
 {{ define "index" }}
 {{ template "header" .}}
+    <div class="index-grid">
     {{ if . }}
-        {{ range $.Ticker }}
-        <div class="stock-container">
-            <p><a class="ticker-link" href="/search?q=">{{ .Symbol }}</a> <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
-            <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
-        </div>
-        {{ end }}
-        {{ range $.Article }}
-        <div class="news-container">
-            <div class="news-article">
-                <img class="news-image" src="{{ .Image }}">
-                <p class="news-headline"><a href="{{ .URL }}">{{ .Headline }}</a></p>
+        <div class="index-stock-ticker-flex">
+            {{ range $.Ticker }}
+            <div class="stock-container">
+                <p><a class="ticker-link" href="/search?q=">{{ .Symbol }}</a> <span class="price is-pulled-right">{{ .CurrentPrice }}</span></p>
+                <p class="percent-change" id="percent-change">{{ .PercentChange }}&#37;&nbsp;<span class="amount-changed">(<span class="change-price">{{ .Change }}</span>)</span></p>
             </div>
+            {{ end }}
         </div>
-        {{ end }}
+        <div class="index-news-grid">
+            {{ range $.Article }}
+            <div class="news-container">
+                <div class="news-article">
+                    <p class="news-headline"><a href="{{ .URL }}">{{ .Headline }}</a></p>
+                    <img class="news-image" src="{{ .Image }}">
+                    <p>{{ .Summary }}</p>
+                </div>
+            </div>
+            {{ end }}
+        </div>
     {{ end }}
+    </div>
+    
     <script>
         priceChange = document.getElementsByClassName("change-price")
         tickerLink = document.getElementsByClassName("ticker-link")
