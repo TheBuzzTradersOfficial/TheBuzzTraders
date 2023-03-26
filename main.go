@@ -1,6 +1,7 @@
 package main
 
 import (
+	"TheBuzzTraders/connections"
 	"TheBuzzTraders/stocks"
 	"bytes"
 	"fmt"
@@ -56,12 +57,13 @@ func Symbol() string {
 
 func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		TickerInfo1 := stocks.GetStockTickerInfo("VZ")
+		TickerInfo1 := stocks.GetStockTickerInfo("QQQ")
 		TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
 		TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
 		TickerInfo4 := stocks.GetStockTickerInfo("AAPL")
 		TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
 
+		// Pulls in a list of news articles to display
 		var newsList []*stocks.Article
 
 		for i := 0; i < 10; i++ {
@@ -74,6 +76,7 @@ func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
 			newsList = append(newsList, news)
 		}
 
+		// Struct of onjects being passed to the frontend for the index page
 		index := IndexInfo{
 			Ticker:  TickerInfo,
 			Article: newsList,
@@ -152,6 +155,9 @@ func main() {
 	stockapi := stocks.NewClient(stockClient, apiKey)
 
 	fs := http.FileServer(http.Dir("assets"))
+
+	connections.ConnectToDB()
+	connections.InsertStockTicker("AAPL")
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))

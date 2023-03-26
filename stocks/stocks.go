@@ -11,6 +11,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	_ "github.com/gopsql/psql"
 )
 
 type Client struct {
@@ -30,10 +32,11 @@ type StockQuote struct {
 }
 
 type StockTicker struct {
-	Symbol        string
-	CurrentPrice  float64
-	PercentChange float64
-	Change        float64
+	tableName     struct{} `pg:"StockTickerIndex"`
+	Symbol        string   `pg:"Symbol"`
+	CurrentPrice  float64  `pg:"Current_Price"`
+	PercentChange float64  `pg:"Percent_Change"`
+	Change        float64  `pg:"Change"`
 }
 
 type Article struct {

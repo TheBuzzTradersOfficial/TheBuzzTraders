@@ -19,21 +19,28 @@ body {
 .index-grid {
     display: grid;
     justify-items: center;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     grid-template-areas: 
-    "a a a b"
-    "a a a b";
+    "a b b b c"
+    "a b b b c"
+    "a d d d c";
     gap: 20px;
     align-items: start;
 }
 
-.index-stock-ticker-flex {
+.gainers-losers-grid {
+    display: grid;
     grid-area: a;
+    border-right: 1px solid white;
+}
+
+.index-stock-ticker-flex {
+    grid-area: b;
     gap: 20px;
 }
 
 .index-news-grid {
-    grid-area: b;
+    grid-area: c;
     margin: 20px;
     gap: 20px;
 }
@@ -88,12 +95,12 @@ body {
 .news-container {
     background-color: #272733;
     border-radius: 1em;
-    padding: 10px;
+    padding: 5px;
     margin-bottom: 15px;
 }
 
 .news-article {
-    padding: 30px;
+    padding: 20px;
 }
 
 .news-headline {
@@ -109,4 +116,8 @@ body {
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+.index-news-summary {
+    font-size: 0.8em;
 }
