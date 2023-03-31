@@ -45,6 +45,7 @@ func InsertStockTicker(symbol string) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer db.Close()
 
 	tickerInfo := stocks.GetStockTickerInfo(symbol)
 

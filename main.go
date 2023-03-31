@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 )
 
@@ -102,6 +103,7 @@ func newsHandler(w http.ResponseWriter, r *http.Request) {
 	buf.WriteTo(w)
 }
 
+// TODO: Make sure search query is verified to be a stock symbol only
 func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(r.URL.String())
@@ -110,8 +112,35 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 			return
 		}
 
+		// Conenct to DB to update search count Popularity_Count
+		db, err := sqlx.Connect("postgres", "user=postgres dbname=BuzzTradersDB sslmode=disable")
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer db.Close()
+
 		params := u.Query()
 		searchQuery := params.Get("q")
+
+		// Gets the value of the Popularity Count
+		var popularityCount string
+		err = db.QueryRow(`SELECT "Popularity_Count" FROM "StockTickerIndex" WHERE "Symbol" = $1`, searchQuery).Scan(&popularityCount)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Increase the value of Popularity_Count by 1
+		changePopCount, err := db.Exec(`UPDATE "StockTickerIndex" SET "Popularity_Count" = "Popularity_Count" + 1 WHERE "Symbol" = $1`, searchQuery)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		rowsAffected, err := changePopCount.RowsAffected()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("\n%d row(s) updated for symbol: %s (Popularity_Count)", rowsAffected, searchQuery)
 
 		results, err := stockapi.FetchQuote(searchQuery)
 		if err != nil {
@@ -151,6 +180,7 @@ func main() {
 		log.Fatal("Env: apiKey must be set")
 	}
 
+	// TODO: Build a timer function for 1 minute to call the InsertStockTicker function to update the most popular stocks on the page
 	stockClient := &http.Client{Timeout: 10 * time.Second}
 	stockapi := stocks.NewClient(stockClient, apiKey)
 

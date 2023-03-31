@@ -6,13 +6,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
 
 	_ "github.com/gopsql/psql"
+	"github.com/jmoiron/sqlx"
 )
 
 type Client struct {
@@ -34,9 +34,19 @@ type StockQuote struct {
 type StockTicker struct {
 	tableName     struct{} `pg:"StockTickerIndex"`
 	Symbol        string   `pg:"Symbol"`
-	CurrentPrice  float64  `pg:"Current_Price"`
-	PercentChange float64  `pg:"Percent_Change"`
-	Change        float64  `pg:"Change"`
+	CurrentPrice  string   `pg:"Current_Price"`
+	PercentChange string   `pg:"Percent_Change"`
+	Change        string   `pg:"Change"`
+}
+
+type StockSymbol struct {
+	Currency      string `json:"currency"`
+	Description   string `json:"description"`
+	DisplaySymbol string `json:"displaySymbol"`
+	Figi          string `json:"figi"`
+	Mic           string `json:"mic"`
+	Symbol        string `json:"symbol"`
+	Type          string `json:"type"`
 }
 
 type Article struct {
@@ -84,7 +94,6 @@ func (c *Client) FetchQuote(query string) (*StockQuote, error) {
 }
 
 // Calls the FetchQuote function and returns a StockQuote struct
-// TODO: fix error returning nil
 func GetQuote(symbol string) *StockQuote {
 	apiKey := os.Getenv("STOCK_API_KEY")
 	if apiKey == "" {
@@ -96,22 +105,80 @@ func GetQuote(symbol string) *StockQuote {
 
 	quote, err := stockapi.FetchQuote(symbol)
 	if err != nil {
-		return nil
+		log.Fatal(err)
 	}
 
 	return quote
 }
 
+func (c *Client) FetchStockSymbols() ([]StockSymbol, error) {
+	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/stock/symbol?exchange=US&token=%s", c.key)
+	resp, err := c.Get(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf(string(body))
+	}
+
+	var m []StockSymbol
+	if err := json.Unmarshal(body, &m); err != nil {
+		panic(err)
+	}
+
+	return m, nil
+}
+
+func (c *Client) GetStockSymbols() (*[]StockSymbol, error) {
+	symbols, err := c.FetchStockSymbols()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &symbols, err
+}
+
 // Calls the GetQuote function in order to return info for the Stock Tickers on the index page
 // This function returns a specific struct StockTicker for that part of the application
 func GetStockTickerInfo(symbol string) *StockTicker {
-	quote := GetQuote(symbol)
 	tickerInfo := &StockTicker{}
 
-	tickerInfo.CurrentPrice = math.Round(quote.CurrentPrice*100) / 100
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=BuzzTradersDB sslmode=disable")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Close()
+
+	var currentPrice string
+	err = db.QueryRow(`SELECT "Current_Price" FROM "StockTickerIndex" WHERE "Symbol" = $1`, symbol).Scan(&currentPrice)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var percentChange string
+	err = db.QueryRow(`SELECT "Percent_Change" FROM "StockTickerIndex" WHERE "Symbol" = $1`, symbol).Scan(&percentChange)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var change string
+	err = db.QueryRow(`SELECT "Change" FROM "StockTickerIndex" WHERE "Symbol" = $1`, symbol).Scan(&change)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tickerInfo.CurrentPrice = currentPrice
 	tickerInfo.Symbol = symbol
-	tickerInfo.PercentChange = math.Round(quote.PercentChange*100) / 100
-	tickerInfo.Change = math.Round(quote.Change*100) / 100
+	tickerInfo.PercentChange = percentChange
+	tickerInfo.Change = change
 
 	return tickerInfo
 }
@@ -139,9 +206,6 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 	if err := json.Unmarshal(body, &m); err != nil {
 		panic(err)
 	}
-	// for _, val := range m {
-	// 	fmt.Println(len(m), val)
-	// }
 
 	return m, err
 }
@@ -149,7 +213,7 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 func (c *Client) GetArticle(articleNum int) (*Article, error) {
 	articles, err := c.FetchMarketNews("general")
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
 	article := articles[articleNum]
