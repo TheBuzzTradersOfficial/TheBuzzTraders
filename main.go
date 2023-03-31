@@ -103,7 +103,28 @@ func newsHandler(w http.ResponseWriter, r *http.Request) {
 	buf.WriteTo(w)
 }
 
-// TODO: Make sure search query is verified to be a stock symbol only
+// Used to verify that the value searched is a valid stock symbol
+func checkSearchQuery(stockapi *stocks.Client, query string) bool {
+	listOfSymbols := stockapi.GetStockSymbols()
+	found := false
+
+	for _, s := range listOfSymbols {
+		if s == query {
+			found = true
+			break
+		}
+	}
+
+	if found {
+		fmt.Println("Search query was a valid symbol")
+		return true
+	} else {
+		fmt.Println("Search query was invalid")
+		return false
+	}
+}
+
+// Used for the search bar to search for different Stock Symbols
 func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(r.URL.String())
@@ -121,6 +142,11 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 
 		params := u.Query()
 		searchQuery := params.Get("q")
+
+		// TODO: Check if searchQuery is in checkSearchQuery and handle errors appropriately:
+		// If true = continue to the searched page
+		// If false = throw error message to user in template and have them search again
+		// ChatGPT help: how to pass an error message from golang to my net/http template if boolean is false
 
 		// Gets the value of the Popularity Count
 		var popularityCount string

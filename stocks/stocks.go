@@ -40,13 +40,7 @@ type StockTicker struct {
 }
 
 type StockSymbol struct {
-	Currency      string `json:"currency"`
-	Description   string `json:"description"`
-	DisplaySymbol string `json:"displaySymbol"`
-	Figi          string `json:"figi"`
-	Mic           string `json:"mic"`
-	Symbol        string `json:"symbol"`
-	Type          string `json:"type"`
+	Symbol string `json:"symbol"`
 }
 
 type Article struct {
@@ -137,13 +131,18 @@ func (c *Client) FetchStockSymbols() ([]StockSymbol, error) {
 	return m, nil
 }
 
-func (c *Client) GetStockSymbols() (*[]StockSymbol, error) {
+func (c *Client) GetStockSymbols() []string {
 	symbols, err := c.FetchStockSymbols()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return &symbols, err
+	var symbolList []string
+	for _, symbol := range symbols {
+		symbolList = append(symbolList, string(symbol.Symbol))
+	}
+
+	return symbolList[0:]
 }
 
 // Calls the GetQuote function in order to return info for the Stock Tickers on the index page
