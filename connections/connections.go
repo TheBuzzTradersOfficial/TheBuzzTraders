@@ -47,11 +47,11 @@ func InsertStockTicker(symbol string) {
 	}
 	defer db.Close()
 
-	tickerInfo := stocks.GetStockTickerInfo(symbol)
+	tickerInfo := stocks.GetStockTickerInfoNoLimit(symbol)
 
-	query := `INSERT INTO "StockTickerIndex"("Symbol", "Change", "Percent_Change", "Current_Price") VALUES ($1, $2, $3, $4) 
+	query := `INSERT INTO "StockTickerIndex"("Symbol", "Change", "Percent_Change", "Current_Price", "Popularity_Count") VALUES ($1, $2, $3, $4, $5) 
 			ON CONFLICT ("Symbol") DO UPDATE SET "Symbol" = $1, "Change" = $2, "Percent_Change" = $3, "Current_Price" = $4`
-	_, err = db.Exec(query, tickerInfo.Symbol, tickerInfo.Change, tickerInfo.PercentChange, tickerInfo.CurrentPrice)
+	_, err = db.Exec(query, tickerInfo.Symbol, tickerInfo.Change, tickerInfo.PercentChange, tickerInfo.CurrentPrice, tickerInfo.PopularityCount)
 	if err != nil {
 		panic(err)
 	} else {

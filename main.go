@@ -116,10 +116,10 @@ func checkSearchQuery(stockapi *stocks.Client, query string) bool {
 	}
 
 	if found {
-		fmt.Println("Search query was a valid symbol")
+		fmt.Println("\nSearch query was a valid symbol")
 		return true
 	} else {
-		fmt.Println("Search query was invalid")
+		fmt.Println("\nSearch query was invalid")
 		return false
 	}
 }
@@ -142,11 +142,11 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 
 		params := u.Query()
 		searchQuery := params.Get("q")
-
-		// TODO: Check if searchQuery is in checkSearchQuery and handle errors appropriately:
-		// If true = continue to the searched page
-		// If false = throw error message to user in template and have them search again
-		// ChatGPT help: how to pass an error message from golang to my net/http template if boolean is false
+		if checkSearchQuery(stockapi, searchQuery) {
+			connections.InsertStockTicker(searchQuery)
+		} else {
+			// TODO: Redirect back to the page user was currently on
+		}
 
 		// Gets the value of the Popularity Count
 		var popularityCount string
@@ -178,6 +178,8 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 			Query:   searchQuery,
 			Results: results,
 		}
+
+		connections.InsertStockTicker(searchQuery)
 
 		buf := &bytes.Buffer{}
 		err = templ.ExecuteTemplate(w, "search", search)
@@ -213,7 +215,6 @@ func main() {
 	fs := http.FileServer(http.Dir("assets"))
 
 	connections.ConnectToDB()
-	connections.InsertStockTicker("AAPL")
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))

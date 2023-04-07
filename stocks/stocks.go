@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -29,6 +30,14 @@ type StockQuote struct {
 	OpenPOD            float64 `json:"o"`
 	PreviousClosePrice float64 `json:"pc"`
 	Tag                int     `json:"t"`
+}
+
+type StockTickerInit struct {
+	Symbol          string
+	CurrentPrice    float64
+	PercentChange   float64
+	Change          float64
+	PopularityCount int
 }
 
 type StockTicker struct {
@@ -143,6 +152,18 @@ func (c *Client) GetStockSymbols() []string {
 	}
 
 	return symbolList[0:]
+}
+
+func GetStockTickerInfoNoLimit(symbol string) *StockTickerInit {
+	quote := GetQuote(symbol)
+	tickerInfo := &StockTickerInit{}
+
+	tickerInfo.CurrentPrice = quote.CurrentPrice
+	tickerInfo.Symbol = symbol
+	tickerInfo.PercentChange = math.Round(quote.PercentChange*100) / 100
+	tickerInfo.Change = quote.Change
+
+	return tickerInfo
 }
 
 // Calls the GetQuote function in order to return info for the Stock Tickers on the index page
