@@ -42,8 +42,9 @@ type Page struct {
 }
 
 type StockSearch struct {
-	Query   string
-	Results *stocks.StockQuote
+	Query        string
+	Results      *stocks.StockQuote
+	ErrorMessage string
 }
 
 type IndexInfo struct {
@@ -116,10 +117,10 @@ func checkSearchQuery(stockapi *stocks.Client, query string) bool {
 	}
 
 	if found {
-		fmt.Println("\nSearch query was a valid symbol")
+		fmt.Println("Search query was a valid symbol")
 		return true
 	} else {
-		fmt.Println("\nSearch query was invalid")
+		fmt.Println("Search query was invalid")
 		return false
 	}
 }
@@ -142,31 +143,33 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 
 		params := u.Query()
 		searchQuery := params.Get("q")
-		if checkSearchQuery(stockapi, searchQuery) {
+
+		if checkSearchQuery(stockapi, searchQuery) == true {
 			connections.InsertStockTicker(searchQuery)
-		} else {
-			// TODO: Redirect back to the page user was currently on
-		}
 
-		// Gets the value of the Popularity Count
-		var popularityCount string
-		err = db.QueryRow(`SELECT "Popularity_Count" FROM "StockTickerIndex" WHERE "Symbol" = $1`, searchQuery).Scan(&popularityCount)
-		if err != nil {
-			log.Fatal(err)
-		}
+			// Gets the value of the Popularity Count
+			var popularityCount string
+			err = db.QueryRow(`SELECT "Popularity_Count" FROM "StockTickerIndex" WHERE "Symbol" = $1`, searchQuery).Scan(&popularityCount)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		// Increase the value of Popularity_Count by 1
-		changePopCount, err := db.Exec(`UPDATE "StockTickerIndex" SET "Popularity_Count" = "Popularity_Count" + 1 WHERE "Symbol" = $1`, searchQuery)
-		if err != nil {
-			log.Fatal(err)
-		}
+			// Increase the value of Popularity_Count by 1
+			changePopCount, err := db.Exec(`UPDATE "StockTickerIndex" SET "Popularity_Count" = "Popularity_Count" + 1 WHERE "Symbol" = $1`, searchQuery)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		rowsAffected, err := changePopCount.RowsAffected()
-		if err != nil {
-			log.Fatal(err)
-		}
+			rowsAffected, err := changePopCount.RowsAffected()
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		fmt.Printf("\n%d row(s) updated for symbol: %s (Popularity_Count)", rowsAffected, searchQuery)
+			fmt.Printf("%d row(s) updated for symbol: %s (Popularity_Count)", rowsAffected, searchQuery)
+		} else if checkSearchQuery(stockapi, searchQuery) == false {
+			// TODO: throw an error message to the user
+			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+		}
 
 		results, err := stockapi.FetchQuote(searchQuery)
 		if err != nil {
@@ -178,8 +181,6 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 			Query:   searchQuery,
 			Results: results,
 		}
-
-		connections.InsertStockTicker(searchQuery)
 
 		buf := &bytes.Buffer{}
 		err = templ.ExecuteTemplate(w, "search", search)
