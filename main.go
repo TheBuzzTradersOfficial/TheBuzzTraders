@@ -209,9 +209,14 @@ func main() {
 		log.Fatal("Env: apiKey must be set")
 	}
 
-	// TODO: Build a timer function for 1 minute to call the InsertStockTicker function to update the most popular stocks on the page
 	stockClient := &http.Client{Timeout: 10 * time.Second}
 	stockapi := stocks.NewClient(stockClient, apiKey)
+
+	// TODO: Figure out why this is crashing the application
+	// ticker := time.NewTicker(1 * time.Minute)
+	// for range ticker.C {
+	// 	connections.UpdateTable(`"StockTickerIndex"`)
+	// }
 
 	fs := http.FileServer(http.Dir("assets"))
 
