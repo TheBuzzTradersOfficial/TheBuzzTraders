@@ -154,6 +154,7 @@ func (c *Client) GetStockSymbols() []string {
 	return symbolList[0:]
 }
 
+// GetStockTickerInfoNoLimit: Used to get the stock ticker info (no limit because it will call API each time)
 func GetStockTickerInfoNoLimit(symbol string) *StockTickerInit {
 	quote := GetQuote(symbol)
 	tickerInfo := &StockTickerInit{}

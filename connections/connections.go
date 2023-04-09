@@ -58,3 +58,39 @@ func InsertStockTicker(symbol string) {
 		fmt.Println("\nRow inserted successfully for ticker: " + symbol)
 	}
 }
+
+func UpdateTable(tableName string) {
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=BuzzTradersDB sslmode=disable")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`SELECT "Symbol" FROM "StockTickerIndex"`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var symbols []string
+	for rows.Next() {
+		var symbol string
+		err := rows.Scan(&symbol)
+		if err != nil {
+			log.Fatal(err)
+		}
+		symbols = append(symbols, symbol)
+	}
+
+	for _, symbol := range symbols {
+		tickerInfo := stocks.GetStockTickerInfoNoLimit(symbol)
+
+		query := `UPDATE ` + tableName + ` SET "Current_Price" = $1, "Percent_Change" = $2, "Change" = $3 WHERE "Symbol" = $4`
+		_, err = db.Exec(query, tickerInfo.CurrentPrice, tickerInfo.PercentChange, tickerInfo.Change, symbol)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	fmt.Println("Finished updating the StockTickerIndex table")
+}
