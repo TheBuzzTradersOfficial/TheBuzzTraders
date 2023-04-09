@@ -92,5 +92,6 @@ func UpdateTable(tableName string) {
 		}
 	}
 
-	fmt.Println("Finished updating the StockTickerIndex table")
+	fmt.Println("\nFinished updating the StockTickerIndex table")
+	fmt.Printf("List of items updated: %s", symbols[0:])
 }

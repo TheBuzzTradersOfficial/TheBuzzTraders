@@ -167,8 +167,19 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 
 			fmt.Printf("%d row(s) updated for symbol: %s (Popularity_Count)", rowsAffected, searchQuery)
 		} else if checkSearchQuery(stockapi, searchQuery) == false {
-			// TODO: throw an error message to the user
-			http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
+			referer := r.Header.Get("Referer")
+			if referer != "" {
+				query := url.Values{}
+				query.Set("error", "Invalid search query")
+				separator := "?"
+				if strings.Contains(referer, "?") {
+					separator = "&"
+				}
+				http.Redirect(w, r, referer+separator+query.Encode(), http.StatusSeeOther)
+			} else {
+				// TODO: Show splash page error
+				log.Fatal(err)
+			}
 		}
 
 		results, err := stockapi.FetchQuote(searchQuery)
@@ -193,6 +204,13 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 	}
 }
 
+func refreshStockTickerInfo() {
+	ticker := time.NewTicker(1 * time.Minute)
+	for range ticker.C {
+		connections.UpdateTable(`"StockTickerIndex"`)
+	}
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -212,12 +230,6 @@ func main() {
 	stockClient := &http.Client{Timeout: 10 * time.Second}
 	stockapi := stocks.NewClient(stockClient, apiKey)
 
-	// TODO: Figure out why this is crashing the application
-	// ticker := time.NewTicker(1 * time.Minute)
-	// for range ticker.C {
-	// 	connections.UpdateTable(`"StockTickerIndex"`)
-	// }
-
 	fs := http.FileServer(http.Dir("assets"))
 
 	connections.ConnectToDB()
@@ -227,5 +239,8 @@ func main() {
 	mux.HandleFunc("/", indexHandler(stockapi))
 	mux.HandleFunc("/News", newsHandler)
 	mux.HandleFunc("/search", searchHandler(stockapi))
+
+	go refreshStockTickerInfo()
+
 	http.ListenAndServe(":"+port, mux)
 }
