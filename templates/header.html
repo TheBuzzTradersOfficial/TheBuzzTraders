@@ -48,11 +48,16 @@
     <script>
       const urlParams = new URLSearchParams(window.location.search);
       const errorMessage = urlParams.get('error');
-      if (errorMessage) {
-          const searchInput = document.querySelector('.search-input');
-          if (searchInput) {
+      const searchInput = document.querySelector('.search-input');
+      if (searchInput) {
+          if (errorMessage) {
               searchInput.placeholder = 'Not a valid stock symbol';
               searchInput.classList.add('error');
+              searchInput.classList.add('search-input-error');
+          } else {
+              searchInput.placeholder = 'Enter a stock symbol';
+              searchInput.classList.remove('error');
+              searchInput.classList.remove('search-input-error');
           }
       }
     </script>

@@ -127,6 +127,7 @@ func checkSearchQuery(stockapi *stocks.Client, query string) bool {
 
 // Used for the search bar to search for different Stock Symbols
 func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
+	// TODO: disregard capitalization of stock symbols
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(r.URL.String())
 		if err != nil {
