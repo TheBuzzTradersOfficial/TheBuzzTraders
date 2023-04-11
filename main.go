@@ -143,7 +143,7 @@ func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
 		defer db.Close()
 
 		params := u.Query()
-		searchQuery := params.Get("q")
+		searchQuery := strings.ToUpper(params.Get("q"))
 
 		if checkSearchQuery(stockapi, searchQuery) == true {
 			connections.InsertStockTicker(searchQuery)
