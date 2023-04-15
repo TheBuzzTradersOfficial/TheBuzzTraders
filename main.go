@@ -57,6 +57,7 @@ func Symbol() string {
 	return p.Symbol
 }
 
+// TODO: Add the top 4 most searched stocks in the past hour to the main page stock tickers
 func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		TickerInfo1 := stocks.GetStockTickerInfo("QQQ")
@@ -127,7 +128,6 @@ func checkSearchQuery(stockapi *stocks.Client, query string) bool {
 
 // Used for the search bar to search for different Stock Symbols
 func searchHandler(stockapi *stocks.Client) http.HandlerFunc {
-	// TODO: disregard capitalization of stock symbols
 	return func(w http.ResponseWriter, r *http.Request) {
 		u, err := url.Parse(r.URL.String())
 		if err != nil {
@@ -241,7 +241,7 @@ func main() {
 	mux.HandleFunc("/News", newsHandler)
 	mux.HandleFunc("/search", searchHandler(stockapi))
 
-	go refreshStockTickerInfo()
+	// go refreshStockTickerInfo()
 
 	http.ListenAndServe(":"+port, mux)
 }

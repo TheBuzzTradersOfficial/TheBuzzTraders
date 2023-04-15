@@ -1,6 +1,7 @@
 body {
-    background-color: #15161F;
+    background-color: #0E0E0E;
     color: #ffffff;
+    overflow: hidden;
 }
 
 .navbar {
@@ -42,9 +43,12 @@ body {
 }
 
 .gainers-losers-grid {
-    display: grid;
-    grid-area: a;
-    border-right: 1px solid white;
+    font-family: "Times New Roman", Times, serif;
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    color: #FFFFFF;
+    text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
 }
 
 .index-stock-ticker-flex {
@@ -56,12 +60,14 @@ body {
     grid-area: c;
     margin: 20px;
     gap: 20px;
+    height: calc(100vh - 40px); /* Set the height of the sidebar to fill the viewport */
+    overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .stock-container {
     width: fit-content;
     padding: 1rem 2rem 1rem 2rem;
-    background-color: #272733;
+    background-color: #2C2C2C;
     transform:
     perspective(800px)
     rotateY(-8deg);
@@ -102,15 +108,26 @@ body {
     color: #ffffffea;
 }
 
+.news-heading {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 3rem;
+    font-weight: bold;
+    text-align: center;
+    color: #FFFFFF;
+    text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+}
+
+/* TODO: When hover it should not be blocked by div width */
 .news-container {
-    background-color: #272733;
+    background-color: #2C2C2C;
     border-radius: 1em;
     padding: 5px;
     margin-bottom: 15px;
+    height: 27%;
 }
 
 .news-container {
-    background-color: #272733;
+    background-color: #2C2C2C;
     border-radius: 1em;
     padding: 15px;
     margin-bottom: 15px;
@@ -118,12 +135,12 @@ body {
 }
 
 .news-container:hover {
-    transform: scale(1.02);
+    transform: scale(1.01);
     transition: all 0.2s ease-in-out;
 }  
 
 .news-headline {
-    background: linear-gradient(to bottom, #cfc09f 22%,#634f2c 24%, #cfc09f 26%, #cfc09f 27%,#ffecb3 40%,#684a10 78%); 
+    background: #AD834C; 
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     color: #fff;
