@@ -95,3 +95,26 @@ func UpdateTable(tableName string) {
 	fmt.Println("\nFinished updating the StockTickerIndex table")
 	fmt.Printf("List of items updated: %s", symbols[0:])
 }
+
+func GetPopularStocks() {
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=BuzzTradersDB sslmode=disable")
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(`SELECT "Symbol" FROM "StockTickerIndex" ORDER BY "Popularity_Count" DESC LIMIT 4`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var symbol string
+		err = rows.Scan(&symbol)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(symbol)
+	}
+}

@@ -64,18 +64,7 @@
         }
 
         // Change chart based on ticker clicked
-        const tickerLinks = document.querySelectorAll('.stock-ticker');
-        const iframe = document.querySelector('iframe')
-
-        tickerLinks.forEach(link => {
-            link.addEventListener('click', event => {
-                event.preventDefault();
-
-                const symbol = event.target.textContent;
-
-                iframe.src = `https://widget.finnhub.io/widgets/stocks/chart?symbol=${symbol}&watermarkColor=%231db954&backgroundColor=%23232323&textColor=white`;
-            });
-        });
+        const tickerLinks = document.querySelectorAll('.ticker-link');
     </script>
 {{ template "footer" .}}
 {{ end }}

@@ -57,36 +57,43 @@ func Symbol() string {
 	return p.Symbol
 }
 
+func GetNewsArticles(stockapi *stocks.Client, n int) ([]*stocks.Article, error) {
+	var newsList []*stocks.Article
+	for i := 0; i < n; i++ {
+		news, err := stockapi.GetArticle(i)
+		if err != nil {
+			return nil, err
+		}
+		newsList = append(newsList, news)
+	}
+	return newsList, nil
+}
+
 // TODO: Add the top 4 most searched stocks in the past hour to the main page stock tickers
 func indexHandler(stockapi *stocks.Client) http.HandlerFunc {
+	connections.GetPopularStocks()
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		TickerInfo1 := stocks.GetStockTickerInfo("QQQ")
-		TickerInfo2 := stocks.GetStockTickerInfo("TSLA")
-		TickerInfo3 := stocks.GetStockTickerInfo("AMZN")
-		TickerInfo4 := stocks.GetStockTickerInfo("AAPL")
-		TickerInfo := []stocks.StockTicker{*TickerInfo1, *TickerInfo2, *TickerInfo3, *TickerInfo4}
-
-		// Pulls in a list of news articles to display
-		var newsList []*stocks.Article
-
-		for i := 0; i < 10; i++ {
-			news, err := stockapi.GetArticle(i)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			newsList = append(newsList, news)
+		symbols := []string{"QQQ", "TSLA", "AMZN", "AAPL"}
+		var TickerInfo []stocks.StockTicker
+		for _, symbol := range symbols {
+			tickerInfo := stocks.GetStockTickerInfo(symbol)
+			TickerInfo = append(TickerInfo, *tickerInfo)
 		}
 
-		// Struct of onjects being passed to the frontend for the index page
+		newsList, err := GetNewsArticles(stockapi, 10)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		index := IndexInfo{
 			Ticker:  TickerInfo,
 			Article: newsList,
 		}
 
 		buf := &bytes.Buffer{}
-		err := templ.ExecuteTemplate(w, "index", index)
+		err = templ.ExecuteTemplate(w, "index", index)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -106,6 +113,7 @@ func newsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Used to verify that the value searched is a valid stock symbol
+// TODO: If page is refreshed do not increase popularity count for stock
 func checkSearchQuery(stockapi *stocks.Client, query string) bool {
 	listOfSymbols := stockapi.GetStockSymbols()
 	found := false
@@ -225,7 +233,10 @@ func main() {
 
 	apiKey := os.Getenv("STOCK_API_KEY")
 	if apiKey == "" {
-		log.Fatal("Env: apiKey must be set")
+		apiKey = os.Getenv("STOCK_API_KEY2")
+		if apiKey == "" {
+			log.Fatal("Env: apiKey must be set")
+		}
 	}
 
 	stockClient := &http.Client{Timeout: 10 * time.Second}
@@ -234,6 +245,8 @@ func main() {
 	fs := http.FileServer(http.Dir("assets"))
 
 	connections.ConnectToDB()
+	// TODO: Run this every 6 minutes and update Gainers/Losers on index.html
+	stocks.GetGainersLosers("gainers")
 
 	mux := http.NewServeMux()
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))

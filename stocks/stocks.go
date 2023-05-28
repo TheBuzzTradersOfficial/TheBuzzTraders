@@ -3,13 +3,14 @@ package stocks
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
+	"strings"
 	"time"
 
 	_ "github.com/gopsql/psql"
@@ -64,8 +65,26 @@ type Article struct {
 	URL      string `json:"url"`
 }
 
+type StockCandles struct {
+	ClosePrices    []float64 `json:"c"`
+	HighPrices     []float64 `json:"h"`
+	LowPrices      []float64 `json:"l"`
+	OpenPrices     []float64 `json:"o"`
+	ResponseStatus string    `json:"s"`
+	Timestamps     []int64   `json:"t"`
+	Volume         []int64   `json:"v"`
+}
+
 type ArticleList struct {
 	ArticleListItem []Article
+}
+
+type GainersLosers []struct {
+	Symbol            string  `json:"symbol"`
+	Name              string  `json:"name"`
+	Change            float64 `json:"change"`
+	Price             float64 `json:"price"`
+	ChangesPercentage float64 `json:"changesPercentage"`
 }
 
 // Creates a client object that allows us to connect to the API
@@ -73,14 +92,11 @@ func NewClient(httpClient *http.Client, key string) *Client {
 	return &Client{httpClient, key}
 }
 
-// Connects to the finnhub API and makes a call to the Quote endpoint - returns response from the call and error
-func (c *Client) FetchQuote(query string) (*StockQuote, error) {
-	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s&token=%s", url.QueryEscape(query), c.key)
+func (c *Client) fetchAPI(endpoint string) ([]byte, error) {
 	resp, err := c.Get(endpoint)
 	if err != nil {
 		return nil, err
 	}
-
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
@@ -92,6 +108,17 @@ func (c *Client) FetchQuote(query string) (*StockQuote, error) {
 		return nil, fmt.Errorf(string(body))
 	}
 
+	return body, nil
+}
+
+// Connects to the finnhub API and makes a call to the Quote endpoint - returns response from the call and error
+func (c *Client) FetchQuote(query string) (*StockQuote, error) {
+	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/quote?symbol=%s&token=%s", url.QueryEscape(query), c.key)
+	body, err := c.fetchAPI(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
 	res := &StockQuote{}
 	return res, json.Unmarshal(body, res)
 }
@@ -100,7 +127,10 @@ func (c *Client) FetchQuote(query string) (*StockQuote, error) {
 func GetQuote(symbol string) *StockQuote {
 	apiKey := os.Getenv("STOCK_API_KEY")
 	if apiKey == "" {
-		log.Fatal("Env: apiKey must be set")
+		apiKey = os.Getenv("STOCK_API_KEY2")
+		if apiKey == "" {
+			log.Fatal("Env: apiKey must be set")
+		}
 	}
 
 	stockClient := &http.Client{Timeout: 10 * time.Second}
@@ -116,20 +146,9 @@ func GetQuote(symbol string) *StockQuote {
 
 func (c *Client) FetchStockSymbols() ([]StockSymbol, error) {
 	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/stock/symbol?exchange=US&token=%s", c.key)
-	resp, err := c.Get(endpoint)
+	body, err := c.fetchAPI(endpoint)
 	if err != nil {
 		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(string(body))
 	}
 
 	var m []StockSymbol
@@ -207,20 +226,9 @@ func GetStockTickerInfo(symbol string) *StockTicker {
 // Connects to the finnhub API and makes a call to the Market News endpoint - returns response from the call and error
 func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/news?category=%s&token=%s", url.QueryEscape(query), c.key)
-	resp, err := c.Get(endpoint)
+	body, err := c.fetchAPI(endpoint)
 	if err != nil {
 		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf(string(body))
 	}
 
 	var m []Article
@@ -228,7 +236,7 @@ func (c *Client) FetchMarketNews(query string) ([]Article, error) {
 		panic(err)
 	}
 
-	return m, err
+	return m, nil
 }
 
 func (c *Client) GetArticle(articleNum int) (*Article, error) {
@@ -239,5 +247,70 @@ func (c *Client) GetArticle(articleNum int) (*Article, error) {
 
 	article := articles[articleNum]
 
+	// Check if the title starts with a colon and remove it
+	if strings.HasPrefix(article.Headline, ":") {
+		article.Headline = strings.TrimPrefix(article.Headline, ":")
+	}
+
 	return &article, err
+}
+
+func (c *Client) FetchStockCandles(symbol string, resolution int32, from int, to int) (*StockCandles, error) {
+	endpoint := fmt.Sprintf("https://finnhub.io/api/v1/stock/candle?symbol=%s&resolution=%d&from=%d&to=%d&token=%s", symbol, resolution, from, to, c.key)
+	body, err := c.fetchAPI(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &StockCandles{}
+	return res, json.Unmarshal(body, res)
+}
+
+// TODO: Add GetStockCandles
+
+// Retrieves the stock Gainers and Losers from financialmodelingprep.com api
+func (c *Client) FetchGainersLosers(gainLose string) (*GainersLosers, error) {
+	endpoint := fmt.Sprintf("https://financialmodelingprep.com/api/v3/stock_market/%s?apikey=%s", gainLose, c.key)
+	body, err := c.fetchAPI(endpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &GainersLosers{}
+	return res, json.Unmarshal(body, res)
+}
+
+// Calls the FetchQuote function and returns a Gainers/Losers struct
+// Pass in "gainers" or "losers" as a parameter
+func GetGainersLosers(gainLose string) *GainersLosers {
+	apiKey := os.Getenv("FMP_API_KEY")
+	if apiKey == "" {
+		log.Fatal("Env: apiKey must be set")
+	}
+
+	stockClient := &http.Client{Timeout: 10 * time.Second}
+	stockapi := NewClient(stockClient, apiKey)
+
+	gainersLosers, err := stockapi.FetchGainersLosers(gainLose)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Sorts the stocks to either be the top 10 gainers or top 10 losers
+	if gainLose == "gainers" {
+		sort.Slice(*gainersLosers, func(i, j int) bool {
+			return (*gainersLosers)[i].ChangesPercentage > (*gainersLosers)[j].ChangesPercentage
+		})
+	} else if gainLose == "losers" {
+		sort.Slice(*gainersLosers, func(i, j int) bool {
+			return (*gainersLosers)[i].ChangesPercentage < (*gainersLosers)[j].ChangesPercentage
+		})
+	}
+
+	if len(*gainersLosers) > 10 {
+		*gainersLosers = (*gainersLosers)[:10]
+	}
+
+	fmt.Println(gainersLosers)
+	return gainersLosers
 }
